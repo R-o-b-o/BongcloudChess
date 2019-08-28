@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 typedef struct B_board{
     char (*board)[8][8];
@@ -263,7 +264,8 @@ move get_move_from_input(char input[6]) {
 int main(){
     mainBoard = malloc(sizeof(B_board));
     init_board(mainBoard);
-    
+
+    srand((unsigned)time(NULL));
     /* Print number of nodes at depth 6
     move nullmove = {0, 0};
     mainBoard->ply--;
