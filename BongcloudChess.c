@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -55,8 +54,6 @@ void make_move(move move, B_board *Bboard) {
 void get_moves(const B_board *Bboard, movearray *moveArray) {
     char (*board)[8][8] = Bboard->board;
     moveArray->size = 0;
-    //move * moves = (move*) malloc(sizeof(move)*20);
-    //size_t index = 0;
     
     int is_white = Bboard->ply % 2;
     int pawn_direction = -(is_white*2-1);
@@ -100,7 +97,6 @@ void get_moves(const B_board *Bboard, movearray *moveArray) {
                         col = directions[k][1] + j;
 
                         if (col < 8 && col >= 0 && ((*board)[row][col] == '.'  || is_white != ((*board)[row][col] < 'a'))) {
-                            //moves[index] = malloc(sizeof(move));
                             addtomoves();
                         }
                     }
@@ -109,23 +105,9 @@ void get_moves(const B_board *Bboard, movearray *moveArray) {
             }
         }
     }
-    //realloc(moves, sizeof(move)*index);
-    //free(moves);
 }
 
 int is_terminal(int kings[2]) {
-    /*int kings[2] = {-1, -1}; //maybe store kings within board as to not repeat searching
-    
-    unsigned long index = 0;
-    while ((kings[0] == -1 || kings[1] == -1) && index < 64) {
-        char * piece = (board + (size_t)index);
-        if (*piece == 'K') {
-            kings[0] = index / 8;
-        } else if (*piece == 'k') {
-            kings[1] = index / 8;;
-        }
-        index++;
-    }*/
     if (kings[0] == -1 || kings[1] == -1 || kings[0] == 0  || kings[1] == 7) {
         return 1;
     }
@@ -133,23 +115,6 @@ int is_terminal(int kings[2]) {
 }
 
 int score_board(int kings[2]) {
-    /*int score = 0;
-    int kings[2] = {-1, -1};
-    
-    unsigned long index = 0;
-    while ((kings[0] == -1 || kings[1] == -1) && index < 64) {
-        
-        char * piece = (board + (size_t)index);
-
-        #define upscke(zo) score += (*piece < 'a')*2-1; kings[zo] = index / 8
-        if (*piece == 'K') {
-            upscke(0);
-        } else if (*piece == 'k') {
-            upscke(1);
-        }
-        #undef upscke
-        index++;
-    }*/
     if (kings[1] == -1 || (kings[0] == 0 && kings[1] != 6)) {
         return 1;
     } else if (kings[0] == -1 || kings[1] == 7) {
@@ -167,25 +132,6 @@ B_board * get_bboardcpy(B_board * Bboard) {
     bboardcpy->kings[1] = Bboard->kings[1];
     bboardcpy->ply = Bboard->ply;
     return bboardcpy;
-}
-
-void tree(int depth, B_board *Bboard, move move, unsigned long long * num) {
-    *num = *num + 1;
-    if (depth == 0 || is_terminal(Bboard->kings)) { return; }
-
-    B_board * bboardcpy = get_bboardcpy(Bboard);
-    make_move(move, bboardcpy);
-
-    movearray moveArray;
-    get_moves(bboardcpy, &moveArray);
-    
-    for (size_t i = 0; i < moveArray.size; i++)
-    {
-        tree(depth - 1, bboardcpy, moveArray.moves[i], num);
-    }
-    free(bboardcpy->board);
-    free(bboardcpy);
-    return;
 }
 
 int negamax(B_board *Bboard, int depth) {
@@ -214,8 +160,6 @@ int negamax(B_board *Bboard, int depth) {
 
 move ai_move(B_board *Bboard, int depth) {
     move bestMove;
-    //int noBadMoves = 1;
-    //int bestValue = -1;
 
     movearray moveArray;
     movearray goodMoveArray;
@@ -249,85 +193,11 @@ B_board * mainBoard;
 char* get_board() {
     return (char*)mainBoard->board;
 }
-
-void print_board(B_board * Bboard) {
-    printf("\n"); 
-    for (int i=0; i < 8; i++) {
-        printf("%d  ", i);
-
-        for (int j = 0; j < 8; j++) {
-            printf("%c ", (*Bboard->board)[i][j]);
-        }
-        printf("\n"); 
-    }
-    printf("   ");
-    for (int j = 0; j < 8; j++) {
-        printf("%c ", (char)('a'+j));
-    }
-    printf("\n"); 
-}
-
-move get_move_from_input(char input[6]) {
-    int from = 8*(input[1] - '0') + input[0] - 'a';
-    int to = 8*(input[3] - '0') + input[2] - 'a';
-    move move = {from, to};
-    return move;
-}
  
 int main(){
     mainBoard = malloc(sizeof(B_board));
     init_board(mainBoard);
 
     srand((unsigned)time(NULL));
-    /* Print number of nodes at depth 6
-    move nullmove = {0, 0};
-    mainBoard->ply--;
-    unsigned long long num = 0;
-    tree(6, mainBoard, nullmove, &num);
-    printf("%llu\n", num-1);
-    */
-    printf("--------------- Bongcloud Chess ---------------\n");
-    char input[6];
-    move move;
-    while (1) {
-        print_board(mainBoard);
-        
-        int validMove = 0;
-        while (!validMove) {
-            printf("Enter a move > ");
-            fgets(input, 6, stdin);
-            move = get_move_from_input(input);
-            fflush(stdin);
-
-            movearray moveArray;
-            get_moves(mainBoard, &moveArray);
-            for (int i = 0; i < moveArray.size; i++) {
-                if (moveArray.moves[i].from == move.from && moveArray.moves[i].to == move.to) {
-                    validMove = 1;
-                }
-            }
-            if (!validMove) {
-                printf("That move is invalid\n");
-            }
-        }
-
-        make_move(move, mainBoard);
-        if (is_terminal(mainBoard->kings)) {break;}
-
-        move = ai_move(mainBoard, 6);
-
-        make_move(move, mainBoard);
-        if (is_terminal(mainBoard->kings)) {break;}
-        
-    }
-    
-    int score = score_board(mainBoard->kings);
-    if (score == 1) {
-        printf("White wins!\n");
-    } else if (score == -1) {
-        printf("Black wins!\n");
-    } else {
-        printf("Draw!\n");
-    }
     return 0;
 }
