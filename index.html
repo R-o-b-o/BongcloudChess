@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>BongcloudChess</title>
+    <meta charset="utf-8">
+    <script src="BongcloudChess.js"></script>
+    <style>
+      body {
+      font-family: "Benton Sans", "Helvetica Neue", helvetica, arial, sans-serif;
+      margin: 2em;
+      background-color: darkgray;
+      background-image: url(https://cdn.glitch.com/b79de501-f4af-4c59-b054-b47365dda701%2Fbackground1.png?v=1560942259275);
+      }
+    </style>
+  </head>  
+<body>
+<span id="container"></span>
+
+<canvas id="board" width="800" height="800" style="border:1px solid #3f3f3f; display: block; margin-left: auto; margin-right: auto;"> </canvas>
+<script>  
+const canvas = document.getElementById("board");
+
+GetBoard = Module.cwrap('get_board', 'string', [null]);
+
+AiMove = Module.cwrap('ai_move', null, ['number']);
+UserMove = Module.cwrap('user_move', 'number', ['number', 'number']);
+GetSquares = Module.cwrap('get_squares', 'array', ['number', 'number']);
+IsTerminal = Module.cwrap('is_mainboard_terminal', 'number', [null]);
+
+Module['onRuntimeInitialized'] = onRuntimeInitialized;
+function onRuntimeInitialized() {
+  Module.ccall('init_board', null, [null], []);
+  //Module.ccall('main', 'number', [null], [])
+  refresh();
+}
+
+function refresh() {
+  var board = GetBoard().slice(0, -1);
+  DrawBoard(canvas, board);
+}
+
+function DrawBoard(can, board) {
+    var ctx = can.getContext("2d");
+    var w = can.width;
+    var h = can.height;
+    ctx.fillStyle = "#cfcfcf";
+    ctx.fillRect(0, 0, w, h);
+
+    nRow = nCol = 8;
+
+    w /= nCol;
+    h /= nRow;            
+
+    for (var i = 0; i < nRow; ++i) {
+        for (var j = 0; j < nCol; ++j) {
+        if (j % 2 == 0) {
+            ctx.fillStyle = "#614796";
+            ctx.fillRect(j * w + (i % 2 ? 0 : w), i * h, w, h);
+        }
+        
+        var char = board[i*8+j];
+        ctx.fillStyle = "#dd57ff";
+        ctx.font = "30px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(char,  j * w + 0.5*w, i * h + 0.5*h);
+        }
+    }
+}
+
+var moving = false;
+var move = new Int8Array(2);
+function DrawMove(can, xSquare, ySquare) {
+  var piece = GetBoard().slice(0, -1)[ySquare*8+xSquare];
+  
+  if (piece == piece.toUpperCase() && piece != '.') {
+    refresh();
+    moving = true;
+    var ctx = can.getContext("2d");
+    var tileSize = can.width / 8;
+    ctx.fillStyle = "#241430";
+    ctx.fillRect(xSquare * tileSize, ySquare * tileSize, tileSize, tileSize);
+    ctx.fillStyle = "#dd57ff";
+    ctx.font = "30px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(piece,  xSquare * tileSize + 0.5*tileSize, ySquare * tileSize + 0.5*tileSize);
+    move[0] = ySquare*8+xSquare;
+    
+    //var test = new Uint8Array(GetSquares(move[0], piece.charCodeAt(0)));
+  } else {
+    move[1] = ySquare*8+xSquare;
+    var valid = UserMove(move[0], move[1]);
+    refresh();
+    if (valid == 1) {
+      if (endGame()) {return;}
+      AiMove(6);
+      refresh();
+      if (endGame()) {return;}
+    }
+    moving = false;
+  }
+}
+
+function endGame() {
+  if (IsTerminal() == 1) {
+    var score = Module.ccall('score_mainboard', 'number', [null], []);
+    if (score == 1) {
+      alert("White Wins!");
+    } else if (score == -1) {
+      alert("Black Wins!");
+    } else {
+      alert("Draw!");
+    }
+    location.reload();
+    return true;
+  }
+  return false;
+}
+
+function movePiece(canvas, event) {
+    const rect = canvas.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+    var tileSize = canvas.width / 8;
+    var xSquare = Math.floor(x / tileSize);
+    var ySquare = Math.floor(y / tileSize);
+    
+    DrawMove(canvas, xSquare, ySquare);
+}
+
+
+canvas.addEventListener('mousedown', function(e) {
+    movePiece(canvas, e)
+})
+
+</script>
+</body>
+</html>

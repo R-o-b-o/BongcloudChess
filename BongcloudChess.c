@@ -2,6 +2,8 @@
 #include <string.h>
 #include <time.h>
 
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+
 typedef struct B_board{
     char (*board)[8][8];
     int ply;
@@ -18,7 +20,11 @@ typedef struct movearray{
     move moves[24];
 } movearray;
 
-void init_board(B_board * mainBoard) {
+B_board * mainBoard;
+
+void init_board() {
+    mainBoard = malloc(sizeof(B_board));
+    srand((unsigned)time(NULL));
     static char initBoard[8][8] = {
                     {'.', '.', '.', '.', '.', '.', '.', '.'},
                     {'p', 'p', 'p', 'p', '.', 'p', 'p', 'p'},
@@ -107,6 +113,68 @@ void get_moves(const B_board *Bboard, movearray *moveArray) {
     }
 }
 
+int * get_squares(int square, int pieceInt) {
+    char piece = (char) pieceInt;
+    B_board * Bboard = mainBoard;
+    char (*board)[8][8] = Bboard->board;
+    movearray * moveArray;
+    moveArray->size = 0;
+    
+    int is_white = Bboard->ply % 2;
+    int pawn_direction = -(is_white*2-1);
+    int row, col;
+    int i = square/8; int j = square%8;
+
+    if (piece != '.' && is_white == (piece < 'a')) {
+        #define addtomoves() moveArray->moves[moveArray->size].from = i*8+j;\
+                    moveArray->moves[moveArray->size].to = row*8+col;\
+                    moveArray->size++
+
+        if (piece == 'p' || piece == 'P') {
+            if ((!is_white && i == 1)||(is_white && i == 6)) {
+                row = i + pawn_direction * 2;
+                col = j;
+                if ((*board)[row][col] == '.' && (*board)[i+pawn_direction][col] == '.') {
+                    addtomoves();
+                }
+            }
+            int directions[2][2] = {{pawn_direction, 1}, {pawn_direction, -1}};
+            for (size_t k = 0; k < 2; k++) {
+                row = directions[k][0] + i;
+                col = directions[k][1] + j;
+                if (col < 8 && col >= 0 && (*board)[row][col] != '.' && is_white != ((*board)[row][col] < 'a')) {
+                    addtomoves();
+                }
+            }
+            row = i + pawn_direction;
+            col = j;
+            if ((*board)[row][col] == '.') {
+                addtomoves();
+            }
+        }
+        else {
+            int directions[5][2] = {{0, 1}, {0, -1}, {pawn_direction, 0}, {pawn_direction, 1}, {pawn_direction, -1}};
+
+            for (size_t k = 0; k < 5; k++)
+            {
+                row = directions[k][0] + i;
+                col = directions[k][1] + j;
+
+                if (col < 8 && col >= 0 && ((*board)[row][col] == '.'  || is_white != ((*board)[row][col] < 'a'))) {
+                    addtomoves();
+                }
+            }
+        }
+        #undef addtomoves
+    }
+    int *moveSquares = malloc(moveArray->size * sizeof(int));
+    for (size_t i = 0; i < moveArray->size; i++)
+    {
+        moveSquares[i] = moveArray->moves[i].to;
+    }
+    return moveSquares;
+}
+
 int is_terminal(int kings[2]) {
     if (kings[0] == -1 || kings[1] == -1 || kings[0] == 0  || kings[1] == 7) {
         return 1;
@@ -158,8 +226,10 @@ int negamax(B_board *Bboard, int depth) {
     return value;
 }
 
-move ai_move(B_board *Bboard, int depth) {
+void ai_move(int depth) {
+    B_board *Bboard = mainBoard; 
     move bestMove;
+    int foundMove = 0;
 
     movearray moveArray;
     movearray goodMoveArray;
@@ -181,23 +251,36 @@ move ai_move(B_board *Bboard, int depth) {
             goodMoveArray.moves[goodMoveArray.size] = moveArray.moves[i];
             goodMoveArray.size++;
         } else if (tempValue == 1) {
-            return moveArray.moves[i];
+            bestMove = moveArray.moves[i];
+            foundMove++;
+            break;
         }
     }
     
-    return (goodMoveArray.size != 0) ? goodMoveArray.moves[rand() % goodMoveArray.size] : moveArray.moves[rand() % moveArray.size];
+    if (!foundMove) { bestMove = (goodMoveArray.size != 0) ? goodMoveArray.moves[rand() % goodMoveArray.size] : moveArray.moves[rand() % moveArray.size];}
+    make_move(bestMove, Bboard);
 }
 
-B_board * mainBoard;
+int user_move(int from, int to) {
+    move move = {from, to};
+    movearray moveArray;
+    get_moves(mainBoard, &moveArray);
+    int validMove = 0;
+    for (size_t i = 0; i < moveArray.size; i++)
+    {
+        if (moveArray.moves[i].from == move.from && moveArray.moves[i].to == move.to ) {
+            validMove = 1;
+            make_move(move, mainBoard);
+            break;
+        }
+    }
+    return validMove;
+}
+
+int is_mainboard_terminal() { return is_terminal(mainBoard->kings); }
+
+int score_mainboard() { return score_board(mainBoard->kings); }
 
 char* get_board() {
     return (char*)mainBoard->board;
-}
- 
-int main(){
-    mainBoard = malloc(sizeof(B_board));
-    init_board(mainBoard);
-
-    srand((unsigned)time(NULL));
-    return 0;
 }
