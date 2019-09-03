@@ -329,5 +329,6 @@ int main(){
     } else {
         printf("Draw!\n");
     }
+    system("pause");  
     return 0;
 }
