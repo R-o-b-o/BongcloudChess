@@ -1,1 +1,1 @@
-emcc -O3 -s WASM=1 BongcloudChess.c -o BongcloudChess.js -s EXPORTED_FUNCTIONS='["_init_board", "_get_board", "_user_move", "_ai_move", "_is_mainboard_terminal", "_score_mainboard", "_get_squares" ]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]'
+emcc -O3 -s WASM=1 BongcloudChess.c -o BongcloudChess.js -s EXPORTED_FUNCTIONS='["_init_board", "_get_board", "_user_move", "_ai_move", "_is_mainboard_terminal", "_score_mainboard", "_get_squares", "_malloc", "_free" ]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]'
