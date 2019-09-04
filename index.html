@@ -3,6 +3,7 @@
   <head>
     <title>BongcloudChess</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="BongcloudChess.js"></script>
     <style>
       body {
@@ -20,6 +21,8 @@
 <script>  
 const canvas = document.getElementById("board");
 
+canvas.width = Math.min(screen.height, screen.width)*0.8;
+canvas.height = canvas.width;
 GetBoard = Module.cwrap('get_board', 'string', [null]);
 
 AiMove = Module.cwrap('ai_move', null, ['number']);
@@ -60,7 +63,7 @@ function DrawBoard(can, board) {
         
         var char = board[i*8+j];
         ctx.fillStyle = "#dd57ff";
-        ctx.font = "30px Arial";
+        ctx.font = "bold "+(tileSize*0.3).toString(10) + "px Arial";
         ctx.textAlign = "center";
         ctx.fillText(char,  j * w + 0.5*w, i * h + 0.5*h);
         }
@@ -69,21 +72,22 @@ function DrawBoard(can, board) {
 
 var move = new Int8Array(2);
 var depth = 5;
-
+var tileSize = canvas.width / 8;
 function DrawMove(can, xSquare, ySquare) {
   var piece = GetBoard().slice(0, -1)[ySquare*8+xSquare];
   
   if (piece == piece.toUpperCase() && piece != '.') {
     refresh();
     var ctx = can.getContext("2d");
-    ctx.lineWidth = "4";
-    var tileSize = can.width / 8;
+    ctx.lineWidth = "3";
+    
     ctx.fillStyle = "#241430";
     ctx.fillRect(xSquare * tileSize, ySquare * tileSize, tileSize, tileSize);
     ctx.fillStyle = "#dd57ff";
-    ctx.font = "30px Arial";
+    ctx.font = "bold "+(tileSize*0.3).toString(10) + "px Arial";
     ctx.textAlign = "center";
     ctx.fillText(piece,  xSquare * tileSize + 0.5*tileSize, ySquare * tileSize + 0.5*tileSize);
+    
     move[0] = ySquare*8+xSquare;
     var offset = Module._malloc(5*4)
     var squares = Module.HEAP32.subarray(offset/4, offset/4 + 5);
@@ -98,6 +102,10 @@ function DrawMove(can, xSquare, ySquare) {
         ctx.beginPath();
         ctx.rect(xSquare * tileSize, ySquare * tileSize, tileSize, tileSize);
         ctx.stroke();
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = "#fc03ec";
+        ctx.fillRect(xSquare * tileSize, ySquare * tileSize, tileSize, tileSize);
+        ctx.globalAlpha = 1;
       }
     }
     Module._free(offset);
