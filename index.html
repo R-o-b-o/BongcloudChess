@@ -9,8 +9,7 @@
       body {
       font-family: "Benton Sans", "Helvetica Neue", helvetica, arial, sans-serif;
       margin: 2em;
-      background-color: darkgray;
-      background-image: url(https://cdn.glitch.com/b79de501-f4af-4c59-b054-b47365dda701%2Fbackground1.png?v=1560942259275);
+      background: #181818;
       }
     </style>
   </head>  
@@ -56,16 +55,18 @@ function DrawBoard(can, board) {
 
     for (var i = 0; i < nRow; ++i) {
         for (var j = 0; j < nCol; ++j) {
-        if (j % 2 == 0) {
-            ctx.fillStyle = "#614796";
-            ctx.fillRect(j * w + (i % 2 ? 0 : w), i * h, w, h);
-        }
-        
-        var char = board[i*8+j];
-        ctx.fillStyle = "#dd57ff";
-        ctx.font = "bold "+(tileSize*0.3).toString(10) + "px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(char,  j * w + 0.5*w, i * h + 0.5*h);
+          if (j % 2 == 0) {
+              ctx.fillStyle = "#614796";
+              ctx.fillRect(j * w + (i % 2 ? 0 : w), i * h, w, h);
+          }
+          
+          var char = board[i*8+j];
+          if (char != '.') {
+            ctx.fillStyle = "#dd57ff";
+            ctx.font = "bold "+(tileSize*0.35).toString(10) + "px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(char,  j * w + 0.5*w, i * h + 0.5*h);
+          }
         }
     }
 }
@@ -84,7 +85,7 @@ function DrawMove(can, xSquare, ySquare) {
     ctx.fillStyle = "#241430";
     ctx.fillRect(xSquare * tileSize, ySquare * tileSize, tileSize, tileSize);
     ctx.fillStyle = "#dd57ff";
-    ctx.font = "bold "+(tileSize*0.3).toString(10) + "px Arial";
+    ctx.font = "bold "+(tileSize*0.38).toString(10) + "px Arial";
     ctx.textAlign = "center";
     ctx.fillText(piece,  xSquare * tileSize + 0.5*tileSize, ySquare * tileSize + 0.5*tileSize);
     
