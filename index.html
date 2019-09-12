@@ -7,21 +7,41 @@
     <script src="BongcloudChess.js"></script>
     <style>
       body {
-      font-family: "Benton Sans", "Helvetica Neue", helvetica, arial, sans-serif;
-      margin: 2em;
       background: #181818;
       }
+      .board {
+        margin: 0px;
+        padding: 0px;
+      }
+      body, html { margin: 0px;}
     </style>
   </head>  
 <body>
 <span id="container"></span>
 
-<canvas id="board" width="800" height="800" style="border:1px solid #3f3f3f; display: block; margin-left: auto; margin-right: auto;"> </canvas>
+<canvas id="board" style="border:none; display: block; margin-left: auto; margin-right: auto;"> </canvas>
 <script>  
 const canvas = document.getElementById("board");
+var wp = new Image();
+wp.src = "/pawnwhite.png";
+var bp = new Image();
+bp.src = "/pawnblack.png";
+var wk = new Image();
+wk.src = "/kingwhite.png";
+var bk = new Image();
+bk.src = "/kingblack.png";
 
-canvas.width = Math.min(screen.height, screen.width)*0.8;
-canvas.height = canvas.width;
+window.addEventListener('resize', function() {
+  resizeCanvas();
+  refresh();
+});
+
+function resizeCanvas() {
+  canvas.width = Math.min(window.innerHeight, window.innerWidth);
+  canvas.height = canvas.width;
+  tileSize = canvas.width / 8; 
+}
+
 GetBoard = Module.cwrap('get_board', 'string', [null]);
 
 AiMove = Module.cwrap('ai_move', null, ['number']);
@@ -33,6 +53,7 @@ Module['onRuntimeInitialized'] = onRuntimeInitialized;
 function onRuntimeInitialized() {
   Module.ccall('init_board', null, [null], []);
   //Module.ccall('main', 'number', [null], [])
+  resizeCanvas();
   refresh();
 }
 
@@ -42,33 +63,46 @@ function refresh() {
 }
 
 function DrawBoard(can, board) {
-    var ctx = can.getContext("2d");
-    var w = can.width;
-    var h = can.height;
-    ctx.fillStyle = "#cfcfcf";
-    ctx.fillRect(0, 0, w, h);
+  var ctx = can.getContext("2d");
+  var w = can.width;
+  var h = can.height;
+  ctx.fillStyle = "#cfcfcf";
+  ctx.fillRect(0, 0, w, h);
 
-    nRow = nCol = 8;
+  nRow = nCol = 8;
 
-    w /= nCol;
-    h /= nRow;            
+  w /= nCol;
+  h /= nRow;           
 
-    for (var i = 0; i < nRow; ++i) {
-        for (var j = 0; j < nCol; ++j) {
-          if (j % 2 == 0) {
-              ctx.fillStyle = "#614796";
-              ctx.fillRect(j * w + (i % 2 ? 0 : w), i * h, w, h);
-          }
-          
-          var char = board[i*8+j];
-          if (char != '.') {
-            ctx.fillStyle = "#dd57ff";
-            ctx.font = "bold "+(tileSize*0.35).toString(10) + "px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText(char,  j * w + 0.5*w, i * h + 0.5*h);
-          }
-        }
+  for (var i = 0; i < nRow; ++i) {
+    for (var j = 0; j < nCol; ++j) {
+      if (j % 2 == 0) {
+          ctx.fillStyle = "#614796";
+          ctx.fillRect(j * w + (i % 2 ? 0 : w), i * h, w, h);
+      }
+      
+      var char = board[i*8+j];
+      if (char != '.') { DrawImage(char, ctx, j * w, i * h, w, h);}
     }
+  }
+  ctx.strokeStyle = "#3f3f3f";
+  ctx.lineWidth = "5";
+  ctx.beginPath();
+  ctx.rect(0, 0, can.width, can.height);
+  ctx.stroke();
+  ctx.strokeStyle = "#000"
+}
+
+function DrawImage(char, ctx, x1, y1, x2, y2) {
+  if (char == 'p') {
+    ctx.drawImage(bp, x1, y1, x2, y2);
+  } else if (char == 'P') {
+    ctx.drawImage(wp, x1, y1, x2, y2);
+  } else if (char == 'k') {
+    ctx.drawImage(bk, x1, y1, x2, y2);
+  } else if (char == 'K') {
+    ctx.drawImage(wk, x1, y1, x2, y2);
+  }
 }
 
 var move = new Int8Array(2);
@@ -84,10 +118,7 @@ function DrawMove(can, xSquare, ySquare) {
     
     ctx.fillStyle = "#241430";
     ctx.fillRect(xSquare * tileSize, ySquare * tileSize, tileSize, tileSize);
-    ctx.fillStyle = "#dd57ff";
-    ctx.font = "bold "+(tileSize*0.38).toString(10) + "px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(piece,  xSquare * tileSize + 0.5*tileSize, ySquare * tileSize + 0.5*tileSize);
+    DrawImage(piece, ctx, xSquare * tileSize, ySquare * tileSize, tileSize, tileSize);
     
     move[0] = ySquare*8+xSquare;
     var offset = Module._malloc(5*4)
@@ -112,31 +143,41 @@ function DrawMove(can, xSquare, ySquare) {
     Module._free(offset);
   } else {
     move[1] = ySquare*8+xSquare;
-    var valid = UserMove(move[0], move[1]);
-    refresh();
+    var valid = UserMove(move[0], move[1]); 
+    requestAnimationFrame(refresh);
     if (valid == 1) {
-      refresh();
+      canvas.style.cursor = 'wait';
       if (endGame()) {return;}
-      var start = Date.now();
-      AiMove(depth);
-      if (Date.now() - start < 200) {depth++;}
-      refresh();
-      if (endGame()) {return;}
+      setTimeout(MakeAiMove, 30);
     }
   }
 }
 
+function MakeAiMove() {
+  var start = Date.now();  
+      var start = Date.now();
+  var start = Date.now();  
+  AiMove(depth);
+  if (Date.now() - start < 300) {depth++;}
+  canvas.style.cursor = 'default';
+  refresh();
+  endGame();
+}
+
 function endGame() {
   if (IsTerminal() == 1) {
-    var score = Module.ccall('score_mainboard', 'number', [null], []);
-    if (score == 1) {
-      alert("White Wins!");
-    } else if (score == -1) {
-      alert("Black Wins!");
-    } else {
-      alert("Draw!");
-    }
-    location.reload();
+    refresh();
+    setTimeout(function(){ 
+      var score = Module.ccall('score_mainboard', 'number', [null], []);
+      if (score == 1) {
+        alert("White Wins!");
+      } else if (score == -1) {
+        alert("Black Wins!");
+      } else {
+        alert("Draw!");
+      }
+      location.reload();
+    }, 0);
     return true;
   }
   return false;
