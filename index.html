@@ -54,7 +54,12 @@ function onRuntimeInitialized() {
   Module.ccall('init_board', null, [null], []);
   //Module.ccall('main', 'number', [null], [])
   resizeCanvas();
-  refresh();
+  checkLoaded();
+}
+
+function checkLoaded() {
+  if (wp.complete && wp.complete && bp.complete && wk.complete && bk.complete) { refresh(); }
+  else { setTimeout(checkLoaded, 50); }
 }
 
 function refresh() {
