@@ -1,6 +1,6 @@
 # BongcloudChess #
 
-![text2unown](bc.png)
+![BC](BC.png)
 
 ## Rules ##
 
