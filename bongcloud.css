@@ -15,7 +15,7 @@ body {
   background-color: rgba(0, 0, 0, 0.4);
 }
 .modal-content {
-  background-color: #9198e5;
+  background-color: #625ec2d9;
   margin: 0 auto;
   padding: 10px;
   border: 1px solid #000;
@@ -26,9 +26,9 @@ body {
   font-family: Verdana, Geneva, sans-serif;
 }
 button {
-  background-color: rgb(46, 0, 59);
+  background-color: #A097CD;
   border: none;
-  color: white;
+  color: #000000;
   padding: 20px 40px;
   text-decoration: none;
   display: inline-block;
@@ -39,6 +39,6 @@ button {
   font-family: Verdana, Geneva, sans-serif;
 }
 button:hover {
-  background-color: rgb(175, 76, 142);
+  background-color: #F3ECFF;
 }
 body, html { margin: 0px;}
