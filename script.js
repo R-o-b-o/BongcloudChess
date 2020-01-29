@@ -131,13 +131,13 @@ canvas.addEventListener('mousedown', function (e) {
 })
 
 var wp = new Image();
-wp.src = "/pawnwhite.png";
+wp.src = "/img/pawnwhite.png";
 var bp = new Image();
-bp.src = "/pawnblack.png";
+bp.src = "/img/pawnblack.png";
 var wk = new Image();
-wk.src = "/kingwhite.png";
+wk.src = "/img/kingwhite.png";
 var bk = new Image();
-bk.src = "/kingblack.png";
+bk.src = "/img/kingblack.png";
 
 function checkLoaded() {
     if (wp.complete && wp.complete && bp.complete && wk.complete && bk.complete) { refresh(); }
