@@ -26,19 +26,30 @@ body {
   font-family: Verdana, Geneva, sans-serif;
 }
 button {
-  background-color: #A097CD;
+  background: none;
   border: none;
-  color: #000000;
-  padding: 20px 40px;
+  color: #ffffff;
+  padding: 15px 30px;
   text-decoration: none;
   display: inline-block;
-  font-size: 25px;
+  font-size: 35px;
   border-radius: 5px;
   cursor: pointer;
   transition-duration: 0.2s;
   font-family: 'Roboto', sans-serif;
 }
 button:hover {
+  transform: scale(1.048);
+}
+.button-small {
+  font-size: 18px; background-color: #A097CD;
+  color: #000000;
+}
+.button-small:hover {
   background-color: #F3ECFF;
+}
+.hide {
+  transition: transform 0.2s 0s;
+  transform: translateY(-100%);
 }
 body, html { margin: 0px;}
