@@ -11,13 +11,13 @@ typedef struct B_board{
 } B_board;
 
 typedef struct move{
-    int from; // could store both in same int and use masking
+    int from; // could store both in same int and use masking (less mem but less time eff)
     int to;
 } move;
 
 typedef struct movearray{
     size_t size;
-    move moves[24];
+    move moves[24]; // 24 is the max num of moves possible
 } movearray;
 
 B_board * mainBoard;
@@ -38,7 +38,7 @@ void init_board() {
     
     mainBoard->board = &initBoard;
     mainBoard->ply = 1;
-    mainBoard->kings[0] = 6;
+    mainBoard->kings[0] = 5;
     mainBoard->kings[1] = 2;
 }
 
@@ -69,11 +69,11 @@ void get_moves(const B_board *Bboard, movearray *moveArray) {
             char piece = (*board)[i][j];
             if (piece != '.' && is_white == (piece < 'a')) {
                 #define addtomoves() moveArray->moves[moveArray->size].from = i*8+j;\
-                            moveArray->moves[moveArray->size].to = row*8+col;\
-                            moveArray->size++
+                                     moveArray->moves[moveArray->size].to = row*8+col;\
+                                     moveArray->size++
 
                 if (piece == 'p' || piece == 'P') {
-                    if ((!is_white && i == 1)||(is_white && i == 6)) {
+                    if ((!is_white && i == 1)||(is_white && i == 6)) { // pawn double move
                         row = i + pawn_direction * 2;
                         col = j;
                         if ((*board)[row][col] == '.' && (*board)[i+pawn_direction][col] == '.') {
@@ -81,7 +81,7 @@ void get_moves(const B_board *Bboard, movearray *moveArray) {
                         }
                     }
                     int directions[2][2] = {{pawn_direction, 1}, {pawn_direction, -1}};
-                    for (size_t k = 0; k < 2; k++) {
+                    for (size_t k = 0; k < 2; k++) { // pawn take
                         row = directions[k][0] + i;
                         col = directions[k][1] + j;
                         if (col < 8 && col >= 0 && (*board)[row][col] != '.' && is_white != ((*board)[row][col] < 'a')) {
@@ -94,7 +94,7 @@ void get_moves(const B_board *Bboard, movearray *moveArray) {
                         addtomoves();
                     }
                 }
-                else {
+                else { // king move
                     int directions[5][2] = {{0, 1}, {0, -1}, {pawn_direction, 0}, {pawn_direction, 1}, {pawn_direction, -1}};
 
                     for (size_t k = 0; k < 5; k++)
@@ -138,11 +138,11 @@ int is_terminal(int kings[2]) {
 
 int score_board(int kings[2]) {
     if (kings[1] == -1 || (kings[0] == 0 && kings[1] != 6)) {
-        return 1;
+        return 100;
     } else if (kings[0] == -1 || kings[1] == 7) {
-        return -1;
+        return -100;
     }
-    return 0;
+    return (7 - kings[1]) - (kings[0]);
 }
 
 B_board * get_bboardcpy(B_board * Bboard) {
@@ -158,10 +158,11 @@ B_board * get_bboardcpy(B_board * Bboard) {
 
 int negamax(B_board *Bboard, int depth) {
     if (depth == 0 || is_terminal(Bboard->kings)) {
-        return (Bboard->ply%2*2-1)*score_board(Bboard->kings);
+        int score =  (Bboard->ply%2*2-1)*score_board(Bboard->kings);
+        return score > 0 ? score + depth : score - depth;
     }
 
-    int value = -2;
+    int value = -200;
 
     movearray moveArray;
     get_moves(Bboard, &moveArray);
@@ -174,7 +175,7 @@ int negamax(B_board *Bboard, int depth) {
         int tmpValue = -negamax(bboardcpy, depth-1);
         free(bboardcpy->board);
         free(bboardcpy);
-        if (tmpValue == 1) { return 1; }
+        //if (tmpValue == 1) { return 1; }
         value = max(value, tmpValue);
     }
     return value;
@@ -182,8 +183,8 @@ int negamax(B_board *Bboard, int depth) {
 
 void ai_move(int depth) {
     B_board *Bboard = mainBoard; 
-    move bestMove;
-    int foundMove = 0;
+    
+    int bestScore = -200;
 
     movearray moveArray;
     movearray goodMoveArray;
@@ -201,34 +202,34 @@ void ai_move(int depth) {
         free(bboardcpy->board);
         free(bboardcpy);
 
-        if (tempValue == 0) {
+        if (tempValue > bestScore) {
+            bestScore = tempValue;
+            goodMoveArray.moves[0] = moveArray.moves[i];
+            goodMoveArray.size = 1;
+            //break;
+        } else if (tempValue == bestScore) {
             goodMoveArray.moves[goodMoveArray.size] = moveArray.moves[i];
             goodMoveArray.size++;
-        } else if (tempValue == 1) {
-            bestMove = moveArray.moves[i];
-            foundMove++;
-            break;
         }
     }
     
-    if (!foundMove) { bestMove = (goodMoveArray.size != 0) ? goodMoveArray.moves[rand() % goodMoveArray.size] : moveArray.moves[rand() % moveArray.size];}
-    make_move(bestMove, Bboard);
+    move moveToMake = (goodMoveArray.size != 0) ? goodMoveArray.moves[rand() % goodMoveArray.size] : moveArray.moves[rand() % moveArray.size];
+    make_move(moveToMake, Bboard);
 }
 
 int user_move(int from, int to) {
     move move = {from, to};
     movearray moveArray;
     get_moves(mainBoard, &moveArray);
-    int validMove = 0;
+
     for (size_t i = 0; i < moveArray.size; i++)
     {
         if (moveArray.moves[i].from == move.from && moveArray.moves[i].to == move.to ) {
-            validMove = 1;
             make_move(move, mainBoard);
-            break;
+            return 1;
         }
     }
-    return validMove;
+    return 0;
 }
 
 int is_mainboard_terminal() { return is_terminal(mainBoard->kings); }
