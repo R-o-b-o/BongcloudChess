@@ -24,7 +24,7 @@ document.getElementById("playbot").onclick = function () {
     hideModal();
     is2player = false;
     
-    if (isBlackBot) { setTimeout(MakeAiMove, 100); }
+    if (isBlackBot) { setTimeout(MakeAiMove, 220); }
 }
 document.getElementById("2player").onclick = function () {
     hideModal();
