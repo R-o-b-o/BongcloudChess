@@ -81,6 +81,7 @@ function refresh() {
 }
 
 var move = new Int8Array(2);
+var isMoving = false
 var depth = 5;
 var ply = 1;
 function movePiece(canvas, event) {
@@ -93,6 +94,7 @@ function movePiece(canvas, event) {
     let piece = GetBoard()[ySquare * 8 + xSquare];
 
     if ((ply % 2) == (piece == piece.toUpperCase()) && piece != '.') {
+        isMoving = true
         refresh();
 
         move[0] = ySquare * 8 + xSquare;
@@ -108,6 +110,8 @@ function movePiece(canvas, event) {
         DrawMove(canvas, piece, squares, xSquare, ySquare);
         Module._free(offset);
     } else {
+        isMoving = false
+        canvas.style.cursor = 'default';
         move[1] = ySquare * 8 + xSquare;
 
         if (isBlackBot) { move[1] = 63 - move[1]; }
@@ -122,6 +126,21 @@ function movePiece(canvas, event) {
                 setTimeout(MakeAiMove, 30);
             }
         }
+    }
+}
+
+function boardCursor(canvas, event) {
+    const rect = canvas.getBoundingClientRect()
+    let tileSize = canvas.width / 8;
+    let xSquare = Math.floor((event.clientX - rect.left) / tileSize);
+    let ySquare = Math.floor((event.clientY - rect.top) / tileSize);
+
+    let piece = GetBoard()[ySquare * 8 + xSquare];
+
+    if (isMoving||((ply % 2) == (piece == piece.toUpperCase()) && piece != '.')) {
+        canvas.style.cursor = 'pointer';
+    } else {
+        canvas.style.cursor = 'default';
     }
 }
 
@@ -180,6 +199,9 @@ function endGame() {
 
 canvas.addEventListener('mousedown', function (e) {
     movePiece(canvas, e)
+})
+canvas.addEventListener('mousemove', function (e) {
+    boardCursor(canvas, e)
 })
 
 var wp = new Image();
