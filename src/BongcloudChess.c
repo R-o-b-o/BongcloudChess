@@ -4,18 +4,18 @@
 
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 
-typedef struct B_board{
+typedef struct B_board {
     char (*board)[8][8];
     int ply;
     int kings[2];
 } B_board;
 
-typedef struct move{
+typedef struct move {
     int from; // could store both in same int and use masking (less mem but less time eff)
     int to;
 } move;
 
-typedef struct movearray{
+typedef struct movearray {
     size_t size;
     move moves[24]; // 24 is the max num of moves possible
 } movearray;
@@ -129,6 +129,7 @@ void get_squares(int square, int * output) {
         output[i] = -1;
     }
 }
+
 int is_terminal(int kings[2]) {
     if (kings[0] == -1 || kings[1] == -1 || kings[0] == 0  || kings[1] == 7) {
         return 1;
